@@ -8,7 +8,7 @@ export class CvpnStack extends cdk.Stack {
 
     // The code that defines your stack goes here
     const vpc = new ec2.Vpc(this, 'Vpc', {
-      maxAzs: 3,
+      maxAzs: 2,
       natGateways: 1,
       cidr: '10.0.0.0/16',
       subnetConfiguration: [
@@ -50,34 +50,37 @@ export class CvpnStack extends cdk.Stack {
         enabled: false
       },
       serverCertificateArn: acmArn,
-      //splitTunnel: true
+      splitTunnel: true
     })
 
-    const clientVpnAssociation = new ec2.CfnClientVpnTargetNetworkAssociation(this, 'Asso', {
+    const clientVpnAssociation = new ec2.CfnClientVpnTargetNetworkAssociation(this, 'cvpnAsso', {
       clientVpnEndpointId: clientVpnEndpoint.ref,
       subnetId: vpc.selectSubnets({
         subnetName: 'cvpn'
       }).subnetIds[0]
     })
 
-    const clientVpnAuthz = new ec2.CfnClientVpnAuthorizationRule(this, 'Authz', {
+    const clientVpnAuthz = new ec2.CfnClientVpnAuthorizationRule(this, 'cvpnAuthz', {
       clientVpnEndpointId: clientVpnEndpoint.ref,
       targetNetworkCidr: vpc.vpcCidrBlock,
       authorizeAllGroups: true,
     })
+    //
+    // Vpc to Public (authz & route) 
+    // 
     //const authzPublic = new ec2.CfnClientVpnAuthorizationRule(this, 'AuthzPublic', {
-    //  clientVpnEndpointId: ep.ref,
+    //  clientVpnEndpointId: clientVpn.ref,
     //  targetNetworkCidr: '0.0.0.0/0',
     //  authorizeAllGroups: true,
     //})
 
-    const clientVpnrRute = new ec2.CfnClientVpnRoute(this, 'Route',{
-      clientVpnEndpointId: clientVpnEndpoint.ref,
-      destinationCidrBlock: '0.0.0.0/0',
-      targetVpcSubnetId: vpc.selectSubnets({
-        subnetName: 'cvpn'
-      }).subnetIds[0]
-    })
+    //const clientVpnRoute = new ec2.CfnClientVpnRoute(this, 'cvpnRoute',{
+    //  clientVpnEndpointId: clientVpnEndpoint.ref,
+    //  destinationCidrBlock: '0.0.0.0/0',
+    //  targetVpcSubnetId: vpc.selectSubnets({
+    //    subnetName: 'cvpn'
+    //  }).subnetIds[0]
+    //})
 
     const pingTestInstance = new ec2.Instance(this, 'PingTest', {
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
