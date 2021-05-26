@@ -82,15 +82,15 @@ export class CvpnStack extends cdk.Stack {
     //  }).subnetIds[0]
     //})
 
-    const pingTestInstance = new ec2.Instance(this, 'PingTest', {
+    const Instance = new ec2.Instance(this, 'demo', {
       instanceType: ec2.InstanceType.of(ec2.InstanceClass.T3, ec2.InstanceSize.MICRO),
       machineImage: new ec2.AmazonLinuxImage(),
       vpc,
     })
 
-    pingTestInstance.connections.allowFrom(ec2.Peer.ipv4(vpc.vpcCidrBlock), ec2.Port.icmpPing())
+    Instance.connections.allowFrom(ec2.Peer.ipv4(vpc.vpcCidrBlock), ec2.Port.icmpPing())
 
-    new CfnOutput(this, 'PingTest', { value: pingTestInstance.instancePrivateIp})
+    new CfnOutput(this, 'demo', { value: Instance.instancePrivateIp})
 
   }
 }
